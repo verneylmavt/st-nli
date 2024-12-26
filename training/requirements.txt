@@ -1,0 +1,3 @@
+torch  
+d2l  
+scikit-learn
