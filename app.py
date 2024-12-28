@@ -256,7 +256,9 @@ def main():
     
     with st.form(key="snli_form"):
         user_input_1 = st.text_input("Enter Text Here (Premise):")
+        st.caption("_e.g. A soccer game with multiple males playing._")
         user_input_2 = st.text_input("Enter Text Here (Hypothesis):")
+        st.caption("_e.g. Some men are playing a sport._")
         submit_button = st.form_submit_button(label="Infer")
         
         if submit_button:
@@ -293,6 +295,13 @@ def main():
             st.caption(key)
             st.latex(value)
     else: pass
+    
+    st.subheader("""Evaluation Metrics""")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Accuracy", "0.8398", border=True)
+    col2.metric("Precision", "0.8404", border=True)
+    col3.metric("Recall", "0.8390", border=True)
+    col4.metric("F1 Score", "0.8392", border=True)
 
 if __name__ == "__main__":
     main()
