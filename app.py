@@ -117,7 +117,11 @@ class Model(nn.Module):
     }
 }
 
-# @st.cache_resource
+# ----------------------
+# Loading Function
+# ----------------------
+
+@st.cache_resource
 def load_model(model_name, vocab):
     def mlp(num_inputs, num_hiddens, flatten):
         net = []
@@ -191,7 +195,7 @@ def load_model(model_name, vocab):
         st.stop()
     return net
 
-# @st.cache_resource
+@st.cache_data
 def load_vocab(model_name):
     try:
         with open(os.path.join("models", "vocab-dict.json"), 'r') as json_file:
@@ -228,27 +232,48 @@ def main():
     
     model_names = list(model_info.keys())
     model = st.selectbox("Select a Model", model_names)
+    st.divider()
     
     vocab = load_vocab(model)
     net = load_model(model, vocab)
     
     st.subheader(model_info[model]["subheader"])
-    user_input_1 = st.text_area("Enter Text Here (Premise):")
-    user_input_2 = st.text_area("Enter Text Here (Hypothesis):")
     
-    if st.button("Analyze"):
-        if user_input_1 and user_input_2:
-            with st.spinner('Analyzing...'):
-                inference = predict_snli(net, vocab, user_input_1, user_input_2)
-            if inference == 'entailment':
-                st.success(f"**Inference:** {inference.capitalize()}")
-            elif inference == 'neutral':
-                st.warning(f"**Inference:** {inference.capitalize()}")
+    # user_input_1 = st.text_area("Enter Text Here (Premise):")
+    # user_input_2 = st.text_area("Enter Text Here (Hypothesis):")
+    # if st.button("Analyze"):
+    #     if user_input_1 and user_input_2:
+    #         with st.spinner('Analyzing...'):
+    #             inference = predict_snli(net, vocab, user_input_1, user_input_2)
+    #         if inference == 'entailment':
+    #             st.success(f"**Inference:** {inference.capitalize()}")
+    #         elif inference == 'neutral':
+    #             st.warning(f"**Inference:** {inference.capitalize()}")
+    #         else:
+    #             st.error(f"**Inference:** {inference.capitalize()}")
+    #     else:
+    #         st.warning("Please enter some text for inference.")
+    
+    with st.form(key="snli_form"):
+        user_input_1 = st.text_input("Enter Text Here (Premise):")
+        user_input_2 = st.text_input("Enter Text Here (Hypothesis):")
+        submit_button = st.form_submit_button(label="Infer")
+        
+        if submit_button:
+            if user_input_1 and user_input_2:
+                with st.spinner('Inferring...'):
+                    inference = predict_snli(net, vocab, user_input_1, user_input_2)
+                if inference == 'entailment':
+                    st.success(f"**Inference:** {inference.capitalize()}")
+                elif inference == 'neutral':
+                    st.warning(f"**Inference:** {inference.capitalize()}")
+                else:
+                    st.error(f"**Inference:** {inference.capitalize()}")
             else:
-                st.error(f"**Inference:** {inference.capitalize()}")
-        else:
-            st.warning("Please enter some text for inference.")
-            
+                st.warning("Please enter some text for inference.")
+
+    
+    # st.divider()            
     st.feedback("thumbs")
     st.warning("""Check here for more details: [GitHub Repo🐙](https://github.com/verneylmavt/st-nli)""")
     st.divider()
