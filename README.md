@@ -1,12 +1,14 @@
 # ⛓️‍💥 Natural Language Inference Model Collections
 
-This repository contains machine learning models of Natural Language Inference, designed to be deployed using ONNX and utilized in a Streamlit-based web application. The app provides an interactive interface for performing various tasks using neural network architectures. [Check here to see other ML models](https://github.com/verneylmavt/ml-model).
+This repository contains machine learning models of Natural Language Inference, designed to be deployed using ONNX and utilized in a Streamlit-based web application. The app provides an interactive interface for performing various tasks using neural network architectures. [Check here to see other ML tasks](https://github.com/verneylmavt/ml-model).
 
 For more information about the training process, please check the `.ipynb` files in the `training` folder.
 
 ## 🎈 Demo App
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://verneylogyt-nli.streamlit.app/)
+
+![Demo GIF](https://github.com/verneylmavt/st-nli/blob/main/assets/demo.gif)
 
 If you encounter message `This app has gone to sleep due to inactivity`, click `Yes, get this app back up!` button to wake the app back up.
 
