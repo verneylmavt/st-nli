@@ -202,7 +202,7 @@ def load_model(model_name, vocab):
             return Y_hat
     try:
         net = Model(vocab, 100, 200)
-        net.load_state_dict(torch.load(os.path.join("models", "model-state.pt"), weights_only=True, map_location=torch.device('cpu')))
+        net.load_state_dict(torch.load(os.path.join("models", model_name,"model-state.pt"), weights_only=True, map_location=torch.device('cpu')))
     except FileNotFoundError:
         st.error(f"Model file not found for {model_name}")
         st.stop()
@@ -214,7 +214,7 @@ def load_model(model_name, vocab):
 @st.cache_data
 def load_vocab(model_name):
     try:
-        with open(os.path.join("models", "vocab-dict.json"), 'r') as json_file:
+        with open(os.path.join("models", model_name,"vocab-dict.json"), 'r') as json_file:
             vocab = json.load(json_file)
         return vocab
     except FileNotFoundError:
