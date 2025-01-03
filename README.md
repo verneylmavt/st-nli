@@ -47,13 +47,13 @@ Ensure you have the following installed:
 
 Alternatively you can run `demo.ipynb` for a minimal interface to quickly test the model (implemented w/ `ipywidgets`).
 
-## Acknowledgement
+## ⚖️ Acknowledgement
 
 I acknowledge the use of the **Stanford Natural Language Inference (SNLI) Corpus** provided by the **Stanford Natural Language Processing Group**. This dataset has been instrumental in conducting the research and developing this project.
 
 - **Dataset Name**: Stanford Natural Language Inference (SNLI) Corpus
 - **Source**: [https://nlp.stanford.edu/projects/snli/](https://nlp.stanford.edu/projects/snli/)
 - **License**: Creative Commons Attribution-ShareAlike 4.0 International License
-- **Description**: This corpus contains 570,000 human-written English sentence pairs manually labeled for balanced classification with the labels entailment, contradiction, and neutral, supporting the task of natural language inference (NLI). :contentReference[oaicite:1]{index=1}
+- **Description**: This corpus contains 570,000 human-written English sentence pairs manually labeled for balanced classification with the labels entailment, contradiction, and neutral, supporting the task of natural language inference (NLI).
 
 I deeply appreciate the efforts of the Stanford Natural Language Processing Group in making this dataset available.
