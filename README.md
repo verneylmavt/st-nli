@@ -47,22 +47,13 @@ Ensure you have the following installed:
 
 Alternatively you can run `demo.ipynb` for a minimal interface to quickly test the model (implemented w/ `ipywidgets`).
 
-<!-- ### Notes
+## Acknowledgement
 
-- Ensure all required model files (ONNX models, vocabulary files, etc.) are placed in the appropriate directories as referenced in the app.
-- If you encounter issues, check the error logs and ensure all dependencies are correctly installed. -->
-<!--
+I acknowledge the use of the **Stanford Natural Language Inference (SNLI) Corpus** provided by the **Stanford Natural Language Processing Group**. This dataset has been instrumental in conducting the research and developing this project.
 
-## Features
+- **Dataset Name**: Stanford Natural Language Inference (SNLI) Corpus
+- **Source**: [https://nlp.stanford.edu/projects/snli/](https://nlp.stanford.edu/projects/snli/)
+- **License**: Creative Commons Attribution-ShareAlike 4.0 International License
+- **Description**: This corpus contains 570,000 human-written English sentence pairs manually labeled for balanced classification with the labels entailment, contradiction, and neutral, supporting the task of natural language inference (NLI). :contentReference[oaicite:1]{index=1}
 
-- Multiple neural network models for sentiment analysis, including Bi-RNN, Text CNN, and Hybrid CNN-RNN with Attention Mechanism.
-- Interactive model selection and sentiment analysis interface.
-- Transparency with preprocessing steps, parameters, and architecture details displayed.
-
-## Contributions
-
-Contributions and suggestions are welcome! Feel free to open an issue or submit a pull request for improvements or additional features.
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for more details. -->
+I deeply appreciate the efforts of the Stanford Natural Language Processing Group in making this dataset available.
