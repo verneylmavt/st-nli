@@ -270,7 +270,7 @@ def main():
     #     else:
     #         st.warning("Please enter some text for inference.")
     
-    with st.form(key="snli_form"):
+    with st.form(key="nli_form"):
         user_input_1 = st.text_input("Enter Text Here (Premise):")
         st.caption("_e.g. A soccer game with multiple males playing._")
         user_input_2 = st.text_input("Enter Text Here (Hypothesis):")
