@@ -2,7 +2,7 @@
 
 This repository contains machine learning models of Natural Language Inference, designed to be deployed using ONNX and utilized in a Streamlit-based web application. The app provides an interactive interface for performing this task using neural network architectures. [Check here to see other ML tasks](https://github.com/verneylmavt/ml-model).
 
-For more information about the training process, please check the `nli.ipynb` files in the `training` folder.
+For more information about the training process, please check the `nli.ipynb` file in the `training` folder.
 
 ## 🎈 Demo App
 
