@@ -1,6 +1,6 @@
 # ⛓️‍💥 Natural Language Inference Model Collections
 
-This repository contains machine learning models of Natural Language Inference, designed to be deployed using ONNX and utilized in a Streamlit-based web application. The app provides an interactive interface for performing this task using neural network architectures. [Check here to see other ML tasks](https://github.com/verneylmavt/ml-model).
+This repository contains machine learning models of Natural Language Inference, designed to be deployed using ONNX and utilized in a Streamlit-based web application. The app provides an interactive interface for performing this task using neural network architectures. For more information about the training process, please check the `nli.ipynb` file in the `training` folder. [Check here to see other ML tasks](https://github.com/verneylmavt/ml-model).
 
 For more information about the training process, please check the `nli.ipynb` file in the `training` folder.
 
@@ -18,14 +18,14 @@ If you encounter message `This app has gone to sleep due to inactivity`, click `
 
 If the demo page is not working, you can fork or clone this repository and run the application locally by following these steps:
 
-### Prerequisites
+<!-- ### Prerequisites
 
 Ensure you have the following installed:
 
 - Python 3.8 or later
 - pip (Python Package Installer)
 
-### Installation Steps
+### Installation Steps -->
 
 1. Clone the repository:
 
