@@ -244,7 +244,10 @@ def predict_snli(net, vocab, premises, hypotheses):
 # Page UI
 # ----------------------
 def main():
-    st.title("Natural Language Inference")
+    st.set_page_config(page_title="Natural Language Inference (NLI)"
+                    # layout="wide"
+                    )
+    st.title("Natural Language Inference (NLI)")
     
     model_names = list(model_info.keys())
     model = st.selectbox("Select a Model", model_names)
