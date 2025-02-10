@@ -2,7 +2,7 @@ import os
 import json
 import streamlit as st
 from streamlit_extras.mention import mention
-from streamlit_extras.echo_expander import echo_expander
+# from streamlit_extras.echo_expander import echo_expander
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -10,128 +10,131 @@ from torch.nn import functional as F
 # ----------------------
 # Model Information
 # ----------------------
-model_info = {
-    "decomposable-attention": {
-        "subheader": "Model: Decomposable Attention Model",
-        "pre_processing": """
-Dataset = Stanford Natural Language Inference (SNLI)
-Embedding Model = GloVe("6B.100d")
-        """,
-        "parameters": """
-Batch Size = 256
+@st.cache_resource
+def load_model_info():
+    model_info = {
+        "decomposable-attention": {
+            "subheader": "Model: Decomposable Attention Model",
+            "pre_processing": """
+    Dataset = Stanford Natural Language Inference (SNLI)
+    Embedding Model = GloVe("6B.100d")
+            """,
+            "parameters": """
+    Batch Size = 256
 
-Vocabulary Size = 18,678
-Embedding Dimension = 100
-Hidden Dimension = 200
-Attend Dimension = 100
-Compare Dimension = 200
-Aggregate Dimension = 400
+    Vocabulary Size = 18,678
+    Embedding Dimension = 100
+    Hidden Dimension = 200
+    Attend Dimension = 100
+    Compare Dimension = 200
+    Aggregate Dimension = 400
 
-Learning Rate = 0.0005
-Epochs = 15
-Optimizer = Adam
-Loss Function = CrossEntropyLoss
-        """,
-        "model_code": """
-def mlp(num_inputs, hidden_dim, flatten):
-    net = []
-    net.append(nn.Dropout(0.2))
-    net.append(nn.Linear(num_inputs, hidden_dim))
-    net.append(nn.ReLU())
-    if flatten:
-        net.append(nn.Flatten(start_dim=1))
-    net.append(nn.Dropout(0.2))
-    net.append(nn.Linear(hidden_dim, hidden_dim))
-    net.append(nn.ReLU())
-    if flatten:
-        net.append(nn.Flatten(start_dim=1))
-    return nn.Sequential(*net)
-
-
-class Attend(nn.Module):
-    def __init__(self, num_inputs, hidden_dim, **kwargs):
-        super(Attend, self).__init__(**kwargs)
-        self.f = mlp(num_inputs, hidden_dim, flatten=False)
-
-    def forward(self, A, B):
-        f_A = self.f(A)
-        f_B = self.f(B)
-        e = torch.bmm(f_A, f_B.permute(0, 2, 1))
-        beta = torch.bmm(F.softmax(e, dim=-1), B)
-        alpha = torch.bmm(F.softmax(e.permute(0, 2, 1), dim=-1), A)
-        return beta, alpha
+    Learning Rate = 0.0005
+    Epochs = 15
+    Optimizer = Adam
+    Loss Function = CrossEntropyLoss
+            """,
+            "model_code": """
+    def mlp(num_inputs, hidden_dim, flatten):
+        net = []
+        net.append(nn.Dropout(0.2))
+        net.append(nn.Linear(num_inputs, hidden_dim))
+        net.append(nn.ReLU())
+        if flatten:
+            net.append(nn.Flatten(start_dim=1))
+        net.append(nn.Dropout(0.2))
+        net.append(nn.Linear(hidden_dim, hidden_dim))
+        net.append(nn.ReLU())
+        if flatten:
+            net.append(nn.Flatten(start_dim=1))
+        return nn.Sequential(*net)
 
 
-class Compare(nn.Module):
-    def __init__(self, num_inputs, hidden_dim, **kwargs):
-        super(Compare, self).__init__(**kwargs)
-        self.g = mlp(num_inputs, hidden_dim, flatten=False)
+    class Attend(nn.Module):
+        def __init__(self, num_inputs, hidden_dim, **kwargs):
+            super(Attend, self).__init__(**kwargs)
+            self.f = mlp(num_inputs, hidden_dim, flatten=False)
 
-    def forward(self, A, B, beta, alpha):
-        V_A = self.g(torch.cat([A, beta], dim=2))
-        V_B = self.g(torch.cat([B, alpha], dim=2))
-        return V_A, V_B
-
-
-class Aggregate(nn.Module):
-    def __init__(self, num_inputs, hidden_dim, num_outputs, **kwargs):
-        super(Aggregate, self).__init__(**kwargs)
-        self.h = mlp(num_inputs, hidden_dim, flatten=True)
-        self.linear = nn.Linear(hidden_dim, num_outputs)
-
-    def forward(self, V_A, V_B):
-        V_A = V_A.sum(dim=1)
-        V_B = V_B.sum(dim=1)
-        Y_hat = self.linear(self.h(torch.cat([V_A, V_B], dim=1)))
-        return Y_hat
+        def forward(self, A, B):
+            f_A = self.f(A)
+            f_B = self.f(B)
+            e = torch.bmm(f_A, f_B.permute(0, 2, 1))
+            beta = torch.bmm(F.softmax(e, dim=-1), B)
+            alpha = torch.bmm(F.softmax(e.permute(0, 2, 1), dim=-1), A)
+            return beta, alpha
 
 
-class Model(nn.Module):
-    def __init__(self, vocab, embedding_dim, hidden_dim, num_inputs_attend=100,
-                 num_inputs_compare=200, num_inputs_agg=400, **kwargs):
-        super(Model, self).__init__(**kwargs)
-        self.embedding = nn.Embedding(len(vocab), embedding_dim)
-        self.attend = Attend(num_inputs_attend, hidden_dim)
-        self.compare = Compare(num_inputs_compare, hidden_dim)
-        self.aggregate = Aggregate(num_inputs_agg, hidden_dim, num_outputs=3)
+    class Compare(nn.Module):
+        def __init__(self, num_inputs, hidden_dim, **kwargs):
+            super(Compare, self).__init__(**kwargs)
+            self.g = mlp(num_inputs, hidden_dim, flatten=False)
 
-    def forward(self, X):
-        premises, hypotheses = X
-        A = self.embedding(premises)
-        B = self.embedding(hypotheses)
-        beta, alpha = self.attend(A, B)
-        V_A, V_B = self.compare(A, B, beta, alpha)
-        Y_hat = self.aggregate(V_A, V_B)
-        return Y_hat
-        """
-        # "forward_pass": {
-        # "Embedding (Premises and Hypotheses)": r'''
-        # \mathbf{A} = \text{Embedding}(\text{premises}) \quad \mathbf{B} = \text{Embedding}(\text{hypotheses}) \\~~\\
-        # \mathbf{A}, \mathbf{B} \in \mathbb{R}^{b \times n \times d}
-        # ''',
-        # "Attend Phase": r'''
-        # \mathbf{f}_A = f(\mathbf{A}) \quad \mathbf{f}_B = f(\mathbf{B}) \\~~\\
-        # \mathbf{f}_A \in \mathbb{R}^{b \times n \times h}, \quad \mathbf{f}_B \in \mathbb{R}^{b \times n \times h} \\~~\\ \underline{\hspace{7.5cm}} \\~~\\
-        # \mathbf{e} = \mathbf{f}_A \cdot \mathbf{f}_B^\top \\~~\\
-        # \mathbf{e} \in \mathbb{R}^{b \times n \times n} \\~~\\ \underline{\hspace{7.5cm}} \\~~\\
-        # \boldsymbol{\beta} = \text{softmax}(\mathbf{e}) \cdot \mathbf{B} \quad \boldsymbol{\alpha} = \text{softmax}(\mathbf{e}^\top) \cdot \mathbf{A} \\~~\\
-        # \boldsymbol{\beta}, \boldsymbol{\alpha} \in \mathbb{R}^{b \times n \times d}
-        # ''',
-        # "Compare Phase": r'''
-        # \mathbf{V}_A = g([\mathbf{A}, \boldsymbol{\beta}]) \quad \mathbf{V}_B = g([\mathbf{B}, \boldsymbol{\alpha}]) \\~~\\
-        # \mathbf{V}_A, \mathbf{V}_B \in \mathbb{R}^{b \times n \times h}
-        # ''',
-        # "Aggregate Phase": r'''
-        # \bar{\mathbf{V}}_A = \sum_{i=1}^{n} \mathbf{V}_A[:, i, :] \quad \bar{\mathbf{V}}_B = \sum_{j=1}^{n} \mathbf{V}_B[:, j, :] \\~~\\
-        # \bar{\mathbf{V}}_A, \bar{\mathbf{V}}_B \in \mathbb{R}^{b \times h} \\~~\\ \underline{\hspace{7.5cm}} \\~~\\
-        # \mathbf{H} = h([\bar{\mathbf{V}}_A, \bar{\mathbf{V}}_B]) \\~~\\
-        # \mathbf{H} \in \mathbb{R}^{b \times h} \\~~\\ \underline{\hspace{7.5cm}} \\~~\\
-        # \mathbf{Y}_{\text{hat}} = \text{Linear}(\mathbf{H}) \\~~\\
-        # \mathbf{Y}_{\text{hat}} \in \mathbb{R}^{b \times c}
-        # '''
-        # }
+        def forward(self, A, B, beta, alpha):
+            V_A = self.g(torch.cat([A, beta], dim=2))
+            V_B = self.g(torch.cat([B, alpha], dim=2))
+            return V_A, V_B
+
+
+    class Aggregate(nn.Module):
+        def __init__(self, num_inputs, hidden_dim, num_outputs, **kwargs):
+            super(Aggregate, self).__init__(**kwargs)
+            self.h = mlp(num_inputs, hidden_dim, flatten=True)
+            self.linear = nn.Linear(hidden_dim, num_outputs)
+
+        def forward(self, V_A, V_B):
+            V_A = V_A.sum(dim=1)
+            V_B = V_B.sum(dim=1)
+            Y_hat = self.linear(self.h(torch.cat([V_A, V_B], dim=1)))
+            return Y_hat
+
+
+    class Model(nn.Module):
+        def __init__(self, vocab, embedding_dim, hidden_dim, num_inputs_attend=100,
+                    num_inputs_compare=200, num_inputs_agg=400, **kwargs):
+            super(Model, self).__init__(**kwargs)
+            self.embedding = nn.Embedding(len(vocab), embedding_dim)
+            self.attend = Attend(num_inputs_attend, hidden_dim)
+            self.compare = Compare(num_inputs_compare, hidden_dim)
+            self.aggregate = Aggregate(num_inputs_agg, hidden_dim, num_outputs=3)
+
+        def forward(self, X):
+            premises, hypotheses = X
+            A = self.embedding(premises)
+            B = self.embedding(hypotheses)
+            beta, alpha = self.attend(A, B)
+            V_A, V_B = self.compare(A, B, beta, alpha)
+            Y_hat = self.aggregate(V_A, V_B)
+            return Y_hat
+            """
+            # "forward_pass": {
+            # "Embedding (Premises and Hypotheses)": r'''
+            # \mathbf{A} = \text{Embedding}(\text{premises}) \quad \mathbf{B} = \text{Embedding}(\text{hypotheses}) \\~~\\
+            # \mathbf{A}, \mathbf{B} \in \mathbb{R}^{b \times n \times d}
+            # ''',
+            # "Attend Phase": r'''
+            # \mathbf{f}_A = f(\mathbf{A}) \quad \mathbf{f}_B = f(\mathbf{B}) \\~~\\
+            # \mathbf{f}_A \in \mathbb{R}^{b \times n \times h}, \quad \mathbf{f}_B \in \mathbb{R}^{b \times n \times h} \\~~\\ \underline{\hspace{7.5cm}} \\~~\\
+            # \mathbf{e} = \mathbf{f}_A \cdot \mathbf{f}_B^\top \\~~\\
+            # \mathbf{e} \in \mathbb{R}^{b \times n \times n} \\~~\\ \underline{\hspace{7.5cm}} \\~~\\
+            # \boldsymbol{\beta} = \text{softmax}(\mathbf{e}) \cdot \mathbf{B} \quad \boldsymbol{\alpha} = \text{softmax}(\mathbf{e}^\top) \cdot \mathbf{A} \\~~\\
+            # \boldsymbol{\beta}, \boldsymbol{\alpha} \in \mathbb{R}^{b \times n \times d}
+            # ''',
+            # "Compare Phase": r'''
+            # \mathbf{V}_A = g([\mathbf{A}, \boldsymbol{\beta}]) \quad \mathbf{V}_B = g([\mathbf{B}, \boldsymbol{\alpha}]) \\~~\\
+            # \mathbf{V}_A, \mathbf{V}_B \in \mathbb{R}^{b \times n \times h}
+            # ''',
+            # "Aggregate Phase": r'''
+            # \bar{\mathbf{V}}_A = \sum_{i=1}^{n} \mathbf{V}_A[:, i, :] \quad \bar{\mathbf{V}}_B = \sum_{j=1}^{n} \mathbf{V}_B[:, j, :] \\~~\\
+            # \bar{\mathbf{V}}_A, \bar{\mathbf{V}}_B \in \mathbb{R}^{b \times h} \\~~\\ \underline{\hspace{7.5cm}} \\~~\\
+            # \mathbf{H} = h([\bar{\mathbf{V}}_A, \bar{\mathbf{V}}_B]) \\~~\\
+            # \mathbf{H} \in \mathbb{R}^{b \times h} \\~~\\ \underline{\hspace{7.5cm}} \\~~\\
+            # \mathbf{Y}_{\text{hat}} = \text{Linear}(\mathbf{H}) \\~~\\
+            # \mathbf{Y}_{\text{hat}} \in \mathbb{R}^{b \times c}
+            # '''
+            # }
+        }
     }
-}
+    return model_info
 
 # ----------------------
 # Loading Function
@@ -249,6 +252,7 @@ def main():
                     )
     st.title("Natural Language Inference (NLI)")
     
+    model_info = load_model_info()
     model_names = list(model_info.keys())
     model = st.selectbox("Select a Model", model_names)
     st.divider()
@@ -316,6 +320,7 @@ def main():
     st.code(model_info[model]["parameters"], language="None")
     
     st.subheader("""Model""")
+    from streamlit_extras.echo_expander import echo_expander
     with echo_expander(code_location="below", label="Code"):
         import torch
         import torch.nn as nn
